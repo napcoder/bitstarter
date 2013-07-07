@@ -24,6 +24,7 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
@@ -65,10 +66,36 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <url_link>', 'Url link', null, null)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+
+    var checkJson = null;
+    if (program.file){ 
+       //console.log("It's a file");
+       checkJson = checkHtmlFile(program.file, program.checks);
+    }
+
+    if (program.url) {
+      //console.log("It's a url");
+      rest.get(program.url).on('complete', function(result) {
+        if (result instanceof Error) {
+            console.error("Error trying to access URL %s. Exiting.", program.url);
+            process.exit(1);
+        }else{
+            fs.writeFileSync("tmpdata", result); // write to tmp file urldata
+            checkJson = checkHtmlFile("tmpdata", program.checks);
+            //console.log("OK");
+            fs.unlinkSync("tmpdata");
+        }
+      });
+    }
+
+    if (checkJson != null) {
+      var outJson = JSON.stringify(checkJson, null, 4);
+      console.log(outJson);    
+    } else {
+      console.error("Generic error");
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
