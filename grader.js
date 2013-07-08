@@ -70,7 +70,7 @@ if(require.main == module) {
         .parse(process.argv);
 
     var checkJson = null;
-    if (program.file){ 
+    if (program.file){
        //console.log("It's a file");
        checkJson = checkHtmlFile(program.file, program.checks);
     }
@@ -90,9 +90,9 @@ if(require.main == module) {
       });
     }
 
-    if (checkJson != null) {
+    if (checkJson !== null) {
       var outJson = JSON.stringify(checkJson, null, 4);
-      console.log(outJson);    
+      console.log(outJson);
     } else {
       console.error("Generic error");
     }
